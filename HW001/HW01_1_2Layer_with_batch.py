@@ -35,7 +35,7 @@ def dactive(x):
     return out
 
 
-np.random.seed()
+np.random.seed(10)
 
 #參數與矩陣設定
 learning_rate = 1e-9
