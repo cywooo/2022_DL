@@ -38,7 +38,7 @@ np.random.seed()
 
 #參數與矩陣設定
 learning_rate = 1e-6
-epoch = 400
+epoch = 300
 batch = 1
 
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) #CALL資料預處裡函式
