@@ -38,13 +38,14 @@ def dactive(x):
 np.random.seed()
 
 #參數與矩陣設定
-learning_rate = 1e-6
-epoch = 150
+learning_rate = 1e-9
+epoch = 300
 batch = 1
 
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) #CALL資料預處裡函式
-valid_num = len(features_test)#分資料集
+#分資料集
 train_num = len(features_train)
+valid_num = len(features_test)
 num_of_features= len(features_train.T)
 num_of_targets= len(target_train.T)
 batch_epoch = np.int64(train_num / batch)
@@ -57,12 +58,12 @@ tloss_draw=np.zeros(epoch)
 vloss_draw=np.zeros(epoch)
 
 #feed forward
-def foward(x, w1, w2, b1, b2, n):
-    x=np.reshape(x,(n, -1))
-    l1 = np.dot(x, w1).T + b1
-    a1 = active(l1)
-    l2 = np.dot(a1.T, w2) + b2
-    a2 = active(l2)
+def foward(x, w1, w2, b1, b2):
+    x=np.reshape(x,(-1, num_of_features))
+    a1 = np.dot(x, w1).T + b1
+    l1 = active(a1)
+    a2 = np.dot(l1.T, w2) + b2
+    l2 = active(a2)
 
     return l1, l2, a1, a2
 
@@ -77,16 +78,17 @@ def back( feature,real, w1, w2, b1, b2, l1, l2, a1, a2, rl,n):
     db2=Edy.T*dactive(a2)
     db1=np.dot((w2*dactive(a1)),Edy.T*dactive(a2))
 
-    w1= w1-learning_rate*dw1/n
-    w2= w2-learning_rate*dw2/n
-    b1= b1-learning_rate*db1/n
-    b2= b2-learning_rate*db2/n
-    return w1, w2, b1, b2 ,dw1, dw2, db1, db2
+    w1= w1-learning_rate*dw1
+    w2= w2-learning_rate*dw2
+    b1= b1-learning_rate*db1
+    b2= b2-learning_rate*db2
+    return w1, w2, b1, b2
 
 def loss ( w1, w2, b1, b2, target, features):
-    target=np.reshape(target,(len(target),1))
-    _,_,a2,_ =foward(features, w1, w2, b1, b2, len(features))
-    re=np.sqrt(np.average(np.power(a2.T-target,2)))
+    target=np.reshape(target,(-1,num_of_targets))
+    l1, l2, a1, a2 =foward(features, w1, w2, b1, b2)
+    
+    re=np.sqrt(np.average(np.power(l2-target,2)))
     return  re
 
 def batch_pick(n,train_num,counter):
@@ -103,8 +105,8 @@ def batch_pick(n,train_num,counter):
 for i in range(epoch):
     for j in range(batch_epoch):   
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
-        L1, L2, A1, A2 = foward(features_train_batch, w1, w2, b1, b2, batch)
-        w1, w2, b1, b2 ,dw1, dw2, db1, db2= back(features_train_batch,target_train_batch,w1, w2, b1, b2, L1, L2, A1, A2, learning_rate, batch)
+        L1, L2, A1, A2 = foward(features_train_batch, w1, w2, b1, b2)
+        w1, w2, b1, b2= back(features_train_batch,target_train_batch,w1, w2, b1, b2, L1, L2, A1, A2, learning_rate, batch)
     tloss_draw[i] = loss( w1, w2, b1, b2, target_test, features_test)
     vloss_draw[i] = loss( w1, w2, b1, b2, target_train, features_train)
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
@@ -116,6 +118,21 @@ plt.ylabel('loss')
 plt.legend(title='learning curve :')
 plt.show()
 
+_, l2_, _, _ = foward(features_train, w1, w2, b1, b2)
+plt.plot(np.linspace(1, train_num, train_num), target_train, label='real')
+plt.plot(np.linspace(1, train_num, train_num), l2_, label='predict')
+plt.xlabel('# of Data')
+plt.title('compare')
+plt.legend(title='learning curve :')
+plt.show()
+
+_, l2_, _, _ = foward(features_test, w1, w2, b1, b2)
+plt.plot(np.linspace(1, valid_num, valid_num), target_test, label='real')
+plt.plot(np.linspace(1, valid_num, valid_num), l2_, label='predict')
+plt.xlabel('# of Data')
+plt.title('compare')
+plt.legend(title='learning curve :')
+plt.show()
 
 
 
