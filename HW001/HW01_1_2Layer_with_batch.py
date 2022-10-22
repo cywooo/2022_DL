@@ -27,19 +27,9 @@ def pre_trea(Raw_data_DF):
 
     return data_train,data_test,target_train,target_test
 
-<<<<<<< Updated upstream
-def active(x):
-    return x
 
-def dactive(x):
-    out= np.ones((len(x),1))
-    return out
-
-
-np.random.seed(10)
-=======
 np.random.seed()
->>>>>>> Stashed changes
+
 
 #參數與矩陣設定
 learning_rate = 1e-8

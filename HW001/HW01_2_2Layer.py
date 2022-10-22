@@ -4,21 +4,17 @@ import random
 import matplotlib.pyplot as plt
 import os
 
-file_path = os.getcwd()+'\energy_efficiency_data.csv' #使CSV檔的位置隨著資料夾變動
-Raw_data_DF = pd.read_csv(file_path) #利用PANDAS將檔案的資料吃進來
+file_path = os.getcwd()+'\ionosphere_data.csv' #使CSV檔的位置隨著資料夾變動
+Raw_data_DF = pd.read_csv(file_path,header=None) #利用PANDAS將檔案的資料吃進來
 #Raw_data_DF=(Raw_data_DF-Raw_data_DF.mean())/Raw_data_DF.std()
 
-def pre_trea(Raw_data_DF):
-    Orien_OH=pd.get_dummies(Raw_data_DF['Orientation'],prefix = 'Orientation') #pandas分離出 Orientation 做one hot  
-    GlazAD_OH=pd.get_dummies(Raw_data_DF['Glazing Area Distribution'],prefix = 'Glazing Area Distribution') #pandas分離出 Glazing Area Distribution
-    Raw_data_DF=Raw_data_DF.drop(['Orientation','Glazing Area Distribution'],axis=1)
-    Raw_data_DF = pd.concat([Raw_data_DF,Orien_OH,GlazAD_OH],axis=1)
-    
-    data_train_DF =Raw_data_DF.sample(frac=0.75,random_state=np.random.randint(1e5),axis=0)
+def pre_trea(Raw_data_DF): 
+    data_train_DF =Raw_data_DF.sample(frac=0.8,random_state=np.random.randint(1e5),axis=0)
     data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)]
     
-    target_train_DF=data_train_DF.pop('Heating Load') #pandas分離出 Heating Load 做one hot  
-    target_test_DF=data_test_DF.pop('Heating Load')
+    target_train_DF=data_train_DF.pop(34) #pandas分離出 Heating Load 做one hot  
+    target_test_DF=data_test_DF.pop(34)
+    target_test_DF=target_test_DF.get_dummies
     #將資料轉為NP
     data_train=data_train_DF.values
     data_test=data_test_DF.values
