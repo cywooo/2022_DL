@@ -86,8 +86,8 @@ def foward(x, w1, w2, b1, b2,n):
 #def back(x, n, w1, w2, w3, b1, b2, b3):
 def back( feature,real, w1, w2, b1, b2, l1, l2, a1, a2, rl,n): 
     feature_=np.reshape(feature,(-1,num_of_features))
-    real_=np.reshape(real,(-1,num_of_targets))
-    Edy=np.reshape((-real_/(l2*np.log(2))),(-1,num_of_targets))
+    real=np.reshape(real,(-1,num_of_targets))
+    Edy=np.reshape((-real/(l2*np.log(2))),(-1,num_of_targets))
     print(Edy)   
     dw2=np.dot(l1,Edy.T)
     dw1=np.dot(feature_.T,(np.dot((w2*dReLU(a1)),Edy.T)).T)
