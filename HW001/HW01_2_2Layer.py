@@ -54,7 +54,7 @@ def Softmax(x, n):
 np.random.seed()
 
 #參數與矩陣設定
-learning_rate = 1e-7
+learning_rate = 1e-9
 epoch = 100
 batch = 1
 
@@ -108,9 +108,9 @@ def cost ( w1, w2, b1, b2, target, features):
     for i in range(len(target)):
         for j in range(num_of_targets):
             if l2[i][j] > 0.00001:
-                ef[i][j] = -(target[i][j]) * (np.log(l2[i][j]))
+                ef[i][j] = -(target[i][j]) * (np.log(l2[i][j])/np.log(2))
             if (ef[i][j]) != 0:
-                sum_ += ef[i][j]
+                sum_ = sum_+ ef[i][j]
     return (sum_ / len(target))
 
 
