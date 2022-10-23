@@ -47,14 +47,14 @@ def dReLU(x):
 def Softmax(x, n):
     value = np.zeros((n, num_of_targets))
     for i in range(n):
-        max = np.max(x[i])
-        value[i] = np.exp(x[i] - max) / np.sum(np.exp(x[i] - max))
+        max_ = np.max(x[i])
+        value[i] = np.exp(x[i] - max_) / np.sum(np.exp(x[i] - max_))
     return value.T
 
 np.random.seed()
 
 #參數與矩陣設定
-learning_rate = 1e-9
+learning_rate = 1e-7
 epoch = 100
 batch = 1
 
@@ -78,8 +78,8 @@ def foward(x, w1, w2, b1, b2,n):
     x=np.reshape(x,(-1, num_of_features))
     a1 = np.dot(x, w1).T + b1
     l1 = ReLU(a1)
-    a2 = np.dot(l1.T, w2) + b2
-    l2 = Softmax(a2,n)
+    a2 = np.dot(l1.T, w2).T + b2
+    l2 = Softmax(a2.T,n)
 
     return l1, l2, a1, a2
 
@@ -87,9 +87,9 @@ def foward(x, w1, w2, b1, b2,n):
 def back( feature,real, w1, w2, b1, b2, l1, l2, a1, a2, rl,n): 
     feature_=np.reshape(feature,(-1,num_of_features))
     real=np.reshape(real,(-1,num_of_targets))
-    Edy=np.reshape((-real/(l2*np.log(2))),(-1,num_of_targets))
-    print(Edy)   
-    dw2=np.dot(l1,Edy.T)
+    Edy=np.reshape(((real/l2.T)+((1-real)/(1-l2.T))),(-1,num_of_targets)) #-real/(l2.T*np.log(2))
+    
+    dw2=np.dot(l1,Edy)
     dw1=np.dot(feature_.T,(np.dot((w2*dReLU(a1)),Edy.T)).T)
     db2=Edy.T
     db1=np.dot((w2*dReLU(a1)),Edy.T)
@@ -100,12 +100,19 @@ def back( feature,real, w1, w2, b1, b2, l1, l2, a1, a2, rl,n):
     b2= b2-learning_rate*db2
     return w1, w2, b1, b2
 
-def loss ( w1, w2, b1, b2, target, features):
-    target=np.reshape(target,(-1,num_of_targets))
-    l1, l2, a1, a2 =foward(features, w1, w2, b1, b2,batch)
-    
-    re=np.sqrt(np.average(np.power(l2-target,2)))
-    return  re
+def cost ( w1, w2, b1, b2, target, features):
+    l1, l2, a1, a2 =foward(features, w1, w2, b1, b2,len(target))
+    ef = np.zeros((len(target), num_of_targets))
+    l2=l2.T
+    sum_ = 0
+    for i in range(len(target)):
+        for j in range(num_of_targets):
+            if l2[i][j] > 0.00001:
+                ef[i][j] = -(target[i][j]) * (np.log(l2[i][j]))
+            if (ef[i][j]) != 0:
+                sum_ += ef[i][j]
+    return (sum_ / len(target))
+
 
 def batch_pick(n,train_num,counter):
     if(n==1):
@@ -123,30 +130,14 @@ for i in range(epoch):
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
         L1, L2, A1, A2 = foward(features_train_batch, w1, w2, b1, b2, batch)
         w1, w2, b1, b2= back(features_train_batch,target_train_batch,w1, w2, b1, b2, L1, L2, A1, A2, learning_rate, batch)
-    tloss_draw[i] = loss( w1, w2, b1, b2, target_test, features_test)
-    vloss_draw[i] = loss( w1, w2, b1, b2, target_train, features_train)
+    tloss_draw[i] = cost( w1, w2, b1, b2, target_test, features_test)
+    vloss_draw[i] = cost( w1, w2, b1, b2, target_train, features_train)
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
     
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
 plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
 plt.xlabel('epoch')
-plt.ylabel('loss')
-plt.legend(title='learning curve :')
-plt.show()
-
-_, l2_, _, _ = foward(features_train, w1, w2, b1, b2, batch)
-plt.plot(np.linspace(1, train_num, train_num), target_train, label='real')
-plt.plot(np.linspace(1, train_num, train_num), l2_, label='predict')
-plt.xlabel('# of Data')
-plt.title('compare')
-plt.legend(title='learning curve :')
-plt.show()
-
-_, l2_, _, _ = foward(features_test, w1, w2, b1, b2, batch)
-plt.plot(np.linspace(1, valid_num, valid_num), target_test, label='real')
-plt.plot(np.linspace(1, valid_num, valid_num), l2_, label='predict')
-plt.xlabel('# of Data')
-plt.title('compare')
+plt.ylabel('cost')
 plt.legend(title='learning curve :')
 plt.show()
 
