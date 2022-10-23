@@ -47,15 +47,18 @@ def dReLU(x):
 def Softmax(x, n):
     value = np.zeros((n, num_of_targets))
     for i in range(n):
-        max_ = np.max(x[i])
-        value[i] = np.exp(x[i] - max_) / np.sum(np.exp(x[i] - max_))
+        #max_ = np.max(x[i])
+        #value[i] = np.exp(x[i] - max_) / np.sum(np.exp(x[i] - max_)) #stable softmax
+        value[i] = np.exp(x[i]) / np.sum(np.exp(x[i]))
     return value.T
 
 np.random.seed()
 
 #參數與矩陣設定
-learning_rate = 1e-9
-epoch = 100
+learning_rate = 1e-6
+epoch = 500
+Num_of_hiden1 = 40
+Num_of_outLayer = 2
 batch = 1
 
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) #CALL資料預處裡函式
@@ -66,10 +69,10 @@ num_of_features= len(features_train.T)
 num_of_targets= len(target_train.T)
 batch_epoch = np.int64(train_num / batch)
 
-w1 = np.random.randn(num_of_features, 16)  * np.sqrt(1. / num_of_features)
-w2 = np.random.randn(16, 2) * np.sqrt(1. / 16)
-b1 = np.random.randn(16,1) * np.sqrt(1. / 16)
-b2 = np.random.randn(2,1) * np.sqrt(1. / 1)
+w1 = np.random.randn(num_of_features, Num_of_hiden1)  * np.sqrt(1. / num_of_features)
+w2 = np.random.randn(Num_of_hiden1, Num_of_outLayer) * np.sqrt(1. / Num_of_hiden1)
+b1 = np.random.randn(Num_of_hiden1, 1) * np.sqrt(1. / Num_of_hiden1)
+b2 = np.random.randn(Num_of_outLayer,1) * np.sqrt(1. / Num_of_outLayer)
 tloss_draw=np.zeros(epoch)
 vloss_draw=np.zeros(epoch)
 
@@ -87,7 +90,7 @@ def foward(x, w1, w2, b1, b2,n):
 def back( feature,real, w1, w2, b1, b2, l1, l2, a1, a2, rl,n): 
     feature_=np.reshape(feature,(-1,num_of_features))
     real=np.reshape(real,(-1,num_of_targets))
-    Edy=np.reshape(((real/l2.T)+((1-real)/(1-l2.T))),(-1,num_of_targets)) #-real/(l2.T*np.log(2))
+    Edy=np.reshape(-1*real/(l2.T*np.log(2)),(-1,num_of_targets)) #-1*real/(l2.T*np.log(2)) #(-1*real/l2.T)+((1-real)/(1-l2.T))
     
     dw2=np.dot(l1,Edy)
     dw1=np.dot(feature_.T,(np.dot((w2*dReLU(a1)),Edy.T)).T)
@@ -108,7 +111,7 @@ def cost ( w1, w2, b1, b2, target, features):
     for i in range(len(target)):
         for j in range(num_of_targets):
             if l2[i][j] > 0.00001:
-                ef[i][j] = -(target[i][j]) * (np.log(l2[i][j])/np.log(2))
+                ef[i][j] = -1*(target[i][j]) * (np.log(l2[i][j])/np.log(2))
             if (ef[i][j]) != 0:
                 sum_ = sum_+ ef[i][j]
     return (sum_ / len(target))
@@ -117,25 +120,26 @@ def cost ( w1, w2, b1, b2, target, features):
 def batch_pick(n,train_num,counter):
     if(n==1):
         return features_train[counter] , target_train[counter]
-    pick = range(counter*n,(counter+1)*n-1)
-    features_train_batch =  np.zeros((n, num_of_features))
-    target_train_batch = np.zeros((n, num_of_targets))
-    for i in range(n):
-        features_train_batch[i] = features_train[pick[i]]
-        target_train_batch[i] = target_train[pick[i]]
-    return features_train_batch, target_train_batch
+    else:
+        pick = range(counter*n,(counter+1)*n-1)
+        features_train_batch =  np.zeros((n, num_of_features))
+        target_train_batch = np.zeros((n, num_of_targets))
+        for i in range(n):
+            features_train_batch[i] = features_train[pick[i]]
+            target_train_batch[i] = target_train[pick[i]]
+        return features_train_batch, target_train_batch
 
 for i in range(epoch):
     for j in range(batch_epoch):   
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
         L1, L2, A1, A2 = foward(features_train_batch, w1, w2, b1, b2, batch)
         w1, w2, b1, b2= back(features_train_batch,target_train_batch,w1, w2, b1, b2, L1, L2, A1, A2, learning_rate, batch)
-    tloss_draw[i] = cost( w1, w2, b1, b2, target_test, features_test)
-    vloss_draw[i] = cost( w1, w2, b1, b2, target_train, features_train)
+    vloss_draw[i] = cost( w1, w2, b1, b2, target_test, features_test)
+    tloss_draw[i] = cost( w1, w2, b1, b2, target_train, features_train)
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
     
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
-plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
+plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testing')
 plt.xlabel('epoch')
 plt.ylabel('cost')
 plt.legend(title='learning curve :')
