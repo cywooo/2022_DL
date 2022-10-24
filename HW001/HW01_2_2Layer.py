@@ -92,6 +92,7 @@ def back( feature,real, w1, w2, b1, b2, l1, l2, a1, a2, rl,n):
     real=np.reshape(real,(-1,num_of_targets))
     #Edy=np.reshape((-1*real/l2.T)+((1-real)/(1-l2.T)),(-1,num_of_targets)) #-1*real/(l2.T*np.log(2)) #(-1*real/l2.T)+((1-real)/(1-l2.T))
     Edy=np.reshape(-1*real/(l2.T*np.log(2)),(-1,num_of_targets))
+    #Edy=np.reshape(real-a2.T,(-1,num_of_targets))
     
     dw2=np.dot(l1,Edy)
     dw1=np.dot(feature_.T,(np.dot((w2*dReLU(a1)),Edy.T)).T)
