@@ -34,7 +34,7 @@ epoch = 300
 batch = 1
 
 Num_of_hiden1 = 16
-Num_of_hiden2 = 50
+Num_of_hiden2 = 8
 Num_of_outLayer = 1
 
 #CALL資料預處裡函式
@@ -75,17 +75,18 @@ def foward(x, w1, w2, w3, b1, b2, b3):
     a2 = np.dot(w2.T, l1) + b2
     l2 = active(a2)
     a3 = np.dot(w3.T, l2) + b3
-    l3 = active(a2)
+    l3 = active(a3)
 
     return l1, l2, l3, a1, a2, a3
 
 #def back(x, n, w1, w2, w3, b1, b2, b3):
 def back( x, t, w1, w2, w3, b1, b2, b3, l1, l2, l3, a1, a2, a3, rl, n): 
-    Edy=-2*(t-l2)
+    Edy=-2*(t.T-l3)
         
-    dw3 =np.dot( l2,(Edy*dactive(a3)).T)
+    dw3 =np.dot( l2,  (Edy*dactive(a3)).T)
     dw2 =np.dot( l1,  (np.dot( w3, (Edy*dactive(a3)) )*dactive(a2)).T )
-    dw1 =np.dot( x.T, (np.dot( w2, (np.dot( w3, Edy*dactive(a3) )*dactive(a2) )*dactive(a1)) ).T )
+    print((np.dot( w3, (Edy*dactive(a3)) )*dactive(a2) ).shape)
+    dw1 =np.dot( x.T, (np.dot( w2, ((np.dot( w3, (Edy*dactive(a3)) )*dactive(a2) )*dactive(a1)) )).T )
     
     db3 =Edy.T*dactive(a3)
     db2 =np.dot( w3, Edy.T*dactive(a3))*dactive(a2)
