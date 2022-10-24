@@ -63,7 +63,6 @@ def active(x):
 
 #active function differential
 def dactive(x):
-    print(x.shape)
     y,x =x.shape
     out= np.ones((y,x))
     return out
@@ -86,7 +85,7 @@ def back( x, t, w1, w2, w3, b1, b2, b3, l1, l2, l3, a1, a2, a3, rl, n):
         
     dw3 =np.dot( l2,(Edy*dactive(a3)).T)
     dw2 =np.dot( l1,  (np.dot( w3, (Edy*dactive(a3)) )*dactive(a2)).T )
-    dw1 =np.dot( x.T,(np.dot(w2,(np.dot(w3,Edy*dactive(a3))*dactive(a2))*dactive(a1))).T)
+    dw1 =np.dot( x.T, (np.dot( w2, (np.dot( w3, Edy*dactive(a3) )*dactive(a2) )*dactive(a1)) ).T )
     
     db3 =Edy.T*dactive(a3)
     db2 =np.dot( w3, Edy.T*dactive(a3))*dactive(a2)
