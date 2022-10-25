@@ -12,6 +12,8 @@ def pre_trea(Raw_data_DF):
     data_train_DF =Raw_data_DF.sample(frac=0.8,random_state=np.random.randint(1e5),axis=0)
     data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)]
     
+    
+    #會有error要改
     target_train_DF=pd.get_dummies(data_train_DF.pop(34)) #pandas分離出 Heating Load 做one hot  
     target_test_DF=pd.get_dummies(data_test_DF.pop(34))
 
@@ -52,11 +54,20 @@ def Softmax(x, n):
         value[i] = np.exp(x[i]) / np.sum(np.exp(x[i]))
     return value.T
 
+def dsoft(x):
+    x=x.T
+    y_ , x_ =(x).shape
+    re = np.zeros((y_,x_))
+    for i in range(y_):
+        for j in range(x_):
+            re[i][j] = (np.exp(x[i][j])/sum(np.exp(x[i]))) - np.exp(2*x[i][j])*np.power(sum(np.exp(x[i])),-2)
+    return re
+
 np.random.seed()
 
 #參數與矩陣設定
-learning_rate = 1e-6
-epoch = 400
+learning_rate = 1e-3
+epoch = 300
 Num_of_hiden1 = 50
 Num_of_outLayer = 2
 batch = 1
@@ -90,14 +101,14 @@ def foward(x, w1, w2, b1, b2,n):
 def back( feature,real, w1, w2, b1, b2, l1, l2, a1, a2, rl,n): 
     feature_=np.reshape(feature,(-1,num_of_features))
     real=np.reshape(real,(-1,num_of_targets))
-    #Edy=np.reshape((-1*real/l2.T)+((1-real)/(1-l2.T)),(-1,num_of_targets)) #-1*real/(l2.T*np.log(2)) #(-1*real/l2.T)+((1-real)/(1-l2.T))
-    Edy=np.reshape(-1*real/(l2.T*np.log(2)),(-1,num_of_targets))
+    Edy=np.reshape((-1*real/l2.T)+((1-real)/(1-l2.T)),(-1,num_of_targets)) #-1*real/(l2.T*np.log(2)) #(-1*real/l2.T)+((1-real)/(1-l2.T))
+    #Edy=np.reshape(-1*real/(l2.T*np.log(2)),(-1,num_of_targets))
     #Edy=np.reshape(real-a2.T,(-1,num_of_targets))
     
-    dw2=np.dot(l1,Edy)
-    dw1=np.dot(feature_.T,(np.dot((w2*dReLU(a1)),Edy.T)).T)
-    db2=Edy.T
-    db1=np.dot((w2*dReLU(a1)),Edy.T)
+    dw2=np.dot(l1,Edy*dsoft(a2))
+    dw1=np.dot(feature_.T,(np.dot((w2*dReLU(a1)),(Edy*dsoft(a2)).T)).T)
+    db2=(Edy*dsoft(a2)).T
+    db1=np.dot((w2*dReLU(a1)),(Edy*dsoft(a2)).T)
 
     w1= w1-learning_rate*dw1
     w2= w2-learning_rate*dw2
@@ -136,10 +147,11 @@ for i in range(epoch):
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
         L1, L2, A1, A2 = foward(features_train_batch, w1, w2, b1, b2, batch)
         w1, w2, b1, b2= back(features_train_batch,target_train_batch,w1, w2, b1, b2, L1, L2, A1, A2, learning_rate, batch)
+    
     vloss_draw[i] = cost( w1, w2, b1, b2, target_test, features_test)
     tloss_draw[i] = cost( w1, w2, b1, b2, target_train, features_train)
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
-    
+  
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
 plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testing')
 plt.xlabel('epoch')
