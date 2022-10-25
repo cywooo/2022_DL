@@ -63,12 +63,12 @@ def dsoft(x):
             re[i][j] = (np.exp(x[i][j])/sum(np.exp(x[i]))) - np.exp(2*x[i][j])*np.power(sum(np.exp(x[i])),-2)
     return re
 
-np.random.seed()
+np.random.seed(200)
 
 #參數與矩陣設定
-learning_rate = 1e-3
+learning_rate = 1e-5
 epoch = 300
-Num_of_hiden1 = 50
+Num_of_hiden1 = 40
 Num_of_outLayer = 2
 batch = 1
 
