@@ -122,7 +122,7 @@ def batch_pick( n, train_num, counter):
 for i in range(epoch):
     for j in range(batch_epoch):   
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
-        print(features_train_batch.shape)
+        #print(features_train_batch.shape)
         L1, L2, L3, A1, A2, A3 = foward(features_train_batch, w1, w2, w3, b1, b2, b3)
         w1, w2, w3, b1, b2, b3 = back(features_train_batch,target_train_batch,w1, w2, w3, b1, b2, b3, L1, L2, L3, A1, A2, A3, learning_rate, batch)
     tloss_draw[i] = loss( w1, w2, w3, b1, b2, b3 , target_test, features_test)
