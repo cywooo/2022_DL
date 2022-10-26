@@ -12,7 +12,9 @@ def pre_trea(Raw_data_DF):
     Orien_OH=pd.get_dummies(Raw_data_DF['Orientation'],prefix = 'Orientation') #pandas分離出 Orientation 做one hot  
     GlazAD_OH=pd.get_dummies(Raw_data_DF['Glazing Area Distribution'],prefix = 'Glazing Area Distribution') #pandas分離出 Glazing Area Distribution 做one hot  
     Raw_data_DF=Raw_data_DF.drop(['Orientation','Glazing Area Distribution'],axis=1) #刪除舊資料
+    #Raw_data_DF=Raw_data_DF.drop(['# Relative Compactness'],axis=1) #第三小題刪除資料使用
     Raw_data_DF = pd.concat([Raw_data_DF,Orien_OH,GlazAD_OH],axis=1) #嫁接在一起
+    #Raw_data_DF = pd.concat([Raw_data_DF,Orien_OH],axis=1) #第三小題刪除資料使用
     
     data_train_DF =Raw_data_DF.sample(frac=0.75,random_state=np.random.randint(1e5),axis=0) #training&testing分群
     data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)]
@@ -29,8 +31,8 @@ def pre_trea(Raw_data_DF):
 #參數與矩陣設定
 np.random.seed(1218) #1218 不錯
 learning_rate = 1e-10 #1e-10 
-epoch = 500 #500
-batch = 10  #10
+epoch = 60 #60
+batch = 100  #100
 
 Num_of_hiden1 = 20 #20
 Num_of_hiden2 = 10 #10
@@ -88,9 +90,9 @@ def back( x, t, w1, w2, w3, b1, b2, b3, l1, l2, l3, a1, a2, a3, rl, n):
     w1= w1-rl*dw1
     w2= w2-rl*dw2
     w3= w3-rl*dw3
-    b1= b1-np.sum(rl*db1, axis = 1,keepdims=True)
-    b2= b2-np.sum(rl*db2, axis = 1,keepdims=True)
-    b3= b3-np.sum(rl*db3, axis = 1,keepdims=True)
+    b1= b1-rl*np.sum(db1, axis = 1,keepdims=True)/batch
+    b2= b2-rl*np.sum(db2, axis = 1,keepdims=True)/batch
+    b3= b3-rl*np.sum(db3, axis = 1,keepdims=True)/batch
     return w1, w2, w3, b1, b2, b3
 
 #to get lossing function
@@ -116,7 +118,7 @@ for i in range(epoch):
         w1, w2, w3, b1, b2, b3 = back(features_train_batch,target_train_batch,w1, w2, w3, b1, b2, b3, L1, L2, L3, A1, A2, A3, learning_rate, batch)
     tloss_draw[i] = loss( w1, w2, w3, b1, b2, b3 , target_test, features_test)
     vloss_draw[i] = loss( w1, w2, w3, b1, b2, b3 , target_train, features_train)
-    #print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
+    print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
     
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
 plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')

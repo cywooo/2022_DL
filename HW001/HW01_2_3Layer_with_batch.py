@@ -80,7 +80,7 @@ np.random.seed(444) #10 #444
 
 #參數與矩陣設定
 learning_rate = 1e-5 #1e-5
-epoch = 3000 #2000
+epoch = 2000 #2000
 batch = 60   #60
 
 Num_of_hiden1 = 64  #64
@@ -107,7 +107,7 @@ b3 = np.random.randn(Num_of_outLayer,1) * np.sqrt(1. / Num_of_outLayer)
 tloss_draw=np.zeros(epoch)
 vloss_draw=np.zeros(epoch)
 accuracy_train=np.zeros(epoch)
-
+accuracy_test=np.zeros(epoch)
 #feed forward
 def foward(x, w1, w2, w3, b1, b2, b3):
     a1 = np.dot(w1.T, x.T) + b1
@@ -156,22 +156,24 @@ for i in range(epoch):
         _, _, l3_, _, _, a3_ = foward(features_train, w1, w2, w3, b1, b2, b3)
         scatter_draw(a3_,l3_,i+1)
     accuracy_train[i] = accuracy( w1, w2, w3, b1, b2, b3 , target_train, features_train)
+    accuracy_test[i] = accuracy( w1, w2, w3, b1, b2, b3 , target_test, features_test)
     tloss_draw[i] = cost( w1, w2, w3, b1, b2, b3 , target_train, features_train)
     vloss_draw[i] = cost( w1, w2, w3, b1, b2, b3 , target_test, features_test)
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
   
 
-plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
-plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
-plt.xlabel('Epoch   Network--> [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
+plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label=' Training')
+plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label=' Testting')
+plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
 plt.ylabel('Loss')
 plt.title('Learning curve chart \n b= %d  epoch= %d Lr= %.1e\n Final training loss %.3f ,testing loss %.3f'%(batch,epoch,learning_rate,tloss_draw[-1], vloss_draw[-1]))
 plt.legend(title='Learning curve :')
 plt.show()
 
 plt.plot(np.linspace(1, epoch, epoch), accuracy_train, label='training accuracy')
-#plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
-plt.xlabel('Epoch   Network--> [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
+#plt.plot(np.linspace(1, epoch, epoch), accuracy_test, label='testning accuracy')
+plt.legend()
+plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
 plt.ylabel('Accuracy')
 plt.title('Accuracy Chart \n b= %d  epoch= %d Lr= %.1e\n Final accuracy %.3f'%(batch,epoch,learning_rate,accuracy_train[-1]))
 #plt.legend(title='learning curve :')
