@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import random  
 import matplotlib.pyplot as plt
 import os
 
@@ -28,13 +27,13 @@ def pre_trea(Raw_data_DF):
     return data_train,data_test,target_train,target_test
 
 #參數與矩陣設定
-np.random.seed()
+np.random.seed() #1218 不錯
 learning_rate = 1e-10
-epoch = 100
-batch = 1
+epoch = 500
+batch = 10
 
-Num_of_hiden1 = 16
-Num_of_hiden2 = 8
+Num_of_hiden1 = 20
+Num_of_hiden2 = 10
 Num_of_outLayer = 1
 
 #CALL資料預處裡函式
@@ -51,9 +50,9 @@ batch_epoch = np.int64(train_num / batch)
 w1 = np.random.randn(num_of_features, Num_of_hiden1) * np.sqrt(1. / num_of_features)
 w2 = np.random.randn(Num_of_hiden1, Num_of_hiden2)  * np.sqrt(1. / Num_of_hiden1)
 w3 = np.random.randn(Num_of_hiden2, Num_of_outLayer)  * np.sqrt(1. / Num_of_hiden2)
-b1 = np.random.randn(Num_of_hiden1,batch)    * np.sqrt(1. / Num_of_hiden1)
-b2 = np.random.randn(Num_of_hiden2,batch)   * np.sqrt(1. / Num_of_hiden2)
-b3 = np.random.randn(Num_of_outLayer,batch) * np.sqrt(1. / Num_of_outLayer)
+b1 = np.random.randn(Num_of_hiden1,1)    * np.sqrt(1. / Num_of_hiden1)
+b2 = np.random.randn(Num_of_hiden2,1)   * np.sqrt(1. / Num_of_hiden2)
+b3 = np.random.randn(Num_of_outLayer,1) * np.sqrt(1. / Num_of_outLayer)
 tloss_draw=np.zeros(epoch)
 vloss_draw=np.zeros(epoch)
 
@@ -75,28 +74,23 @@ def foward(x, w1, w2, w3, b1, b2, b3):
     l2 = active(a2)
     a3 = np.dot(w3.T, l2) + b3
     l3 = active(a3)
-
     return l1, l2, l3, a1, a2, a3
 
 #def back(x, n, w1, w2, w3, b1, b2, b3):
 def back( x, t, w1, w2, w3, b1, b2, b3, l1, l2, l3, a1, a2, a3, rl, n): 
     Edy=-2*(t.T-l3)
-        
     dw3 =np.dot( l2,  (Edy*dactive(a3)).T)
     dw2 =np.dot( l1,  (np.dot( w3, (Edy*dactive(a3)) )*dactive(a2)).T )    
     dw1 =np.dot( x.T, (np.dot( w2, ((np.dot( w3, (Edy*dactive(a3)) )*dactive(a2))) )*dactive(a1)).T)
-    
     db3 =Edy*dactive(a3)
     db2 =np.dot( w3, Edy*dactive(a3))*dactive(a2)
     db1 =np.dot( w2,np.dot( w3, Edy*dactive(a3))*dactive(a2))*dactive(a1)
-
     w1= w1-rl*dw1
     w2= w2-rl*dw2
     w3= w3-rl*dw3
-    
-    b1= b1-np.sum(rl*db1, axis = 0)
-    b2= b2-np.sum(rl*db2, axis = 0)
-    b3= b3-np.sum(rl*db3, axis = 0)
+    b1= b1-np.sum(rl*db1, axis = 1,keepdims=True)
+    b2= b2-np.sum(rl*db2, axis = 1,keepdims=True)
+    b3= b3-np.sum(rl*db3, axis = 1,keepdims=True)
     
     
     return w1, w2, w3, b1, b2, b3
@@ -109,8 +103,6 @@ def loss ( w1, w2, w3, b1, b2, b3, t, x):
 
 #pick arrays as batch
 def batch_pick( n, train_num, counter):
-    #if(n==1):
-        #return features_train[counter][:] , target_train[counter][:]
     features_train_batch = np.zeros((n, num_of_features))
     target_train_batch = np.zeros((n, num_of_targets))
     if((counter+n)>(train_num-1)):
@@ -122,17 +114,17 @@ def batch_pick( n, train_num, counter):
 for i in range(epoch):
     for j in range(batch_epoch):   
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
-        #print(features_train_batch.shape)
         L1, L2, L3, A1, A2, A3 = foward(features_train_batch, w1, w2, w3, b1, b2, b3)
         w1, w2, w3, b1, b2, b3 = back(features_train_batch,target_train_batch,w1, w2, w3, b1, b2, b3, L1, L2, L3, A1, A2, A3, learning_rate, batch)
     tloss_draw[i] = loss( w1, w2, w3, b1, b2, b3 , target_test, features_test)
     vloss_draw[i] = loss( w1, w2, w3, b1, b2, b3 , target_train, features_train)
-    print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
+    #print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
     
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
 plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
 plt.xlabel('epoch')
 plt.ylabel('loss')
+plt.title('learning curve chart \n b= %d  epoch= %d Lr= %.1e\n final training loss %.3f ,testing loss %.3f'%(batch,epoch,learning_rate,tloss_draw[-1], vloss_draw[-1]))
 plt.legend(title='learning curve :')
 plt.show()
 
@@ -140,7 +132,7 @@ _, _, L3_, _, _, _ = foward(features_train, w1, w2, w3, b1, b2, b3)
 plt.plot(np.linspace(1, train_num, train_num), target_train, label='real')
 plt.plot(np.linspace(1, train_num, train_num), L3_.T, label='predict')
 plt.xlabel('# of Data')
-plt.title('compare')
+plt.title('training compare')
 plt.legend(title='learning curve :')
 plt.show()
 
@@ -148,7 +140,7 @@ _, _, L3_, _, _, _ = foward(features_test, w1, w2, w3, b1, b2, b3)
 plt.plot(np.linspace(1, valid_num, valid_num), target_test, label='real')
 plt.plot(np.linspace(1, valid_num, valid_num), L3_.T, label='predict')
 plt.xlabel('# of Data')
-plt.title('compare')
+plt.title('testing compare')
 plt.legend(title='learning curve :')
 plt.show()
 

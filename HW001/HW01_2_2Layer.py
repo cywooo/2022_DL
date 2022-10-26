@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import random  
 import matplotlib.pyplot as plt
 import os
 
@@ -17,7 +16,7 @@ def pre_trea(Raw_data_DF):
     
     #會有error要改
     target_train_DF= pd.concat([data_train_DF.pop('b'),data_train_DF.pop('g')],axis=1)
-    target_test_DF= pd.concat([data_test_DF.pop('b'),data_test_DF.pop('g')],axis=1)
+    target_test_DF= pd.concat([data_test_DF.pop('b'),data_test_DF.pop('g')],axis=1) #Bad在前 Good在後
 
     #將資料轉為NP
     data_train=data_train_DF.values
@@ -71,7 +70,7 @@ np.random.seed()
 
 #參數與矩陣設定
 learning_rate = 1e-4
-epoch = 300
+epoch = 100
 Num_of_hiden1 = 40
 Num_of_outLayer = 2
 batch = 1
@@ -134,6 +133,15 @@ def cost ( w1, w2, b1, b2, target, features):
     return (sum_ / len(target))
 
 
+def scatter_draw(a_out,y):
+    y=y/np.amax(y ,axis=0,keepdims=True)
+    a_out=np.concatenate((a_out,y), axis=0)
+    class_1=a_out[:,a_out[2,:]==1]
+    class_2=a_out[:,a_out[2,:]!=1]
+    plt.scatter(class_1[0,:],class_1[1,:],marker='+')
+    plt.scatter(class_2[0,:],class_2[1,:],marker='o')
+    plt.show()
+    
 def batch_pick(n,train_num,counter):
     if(n==1):
         return features_train[counter] , target_train[counter]
@@ -151,11 +159,11 @@ for i in range(epoch):
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
         L1, L2, A1, A2 = foward(features_train_batch, w1, w2, b1, b2, batch)
         w1, w2, b1, b2= back(features_train_batch,target_train_batch,w1, w2, b1, b2, L1, L2, A1, A2, learning_rate, batch)
-    
     vloss_draw[i] = cost( w1, w2, b1, b2, target_test, features_test)
     tloss_draw[i] = cost( w1, w2, b1, b2, target_train, features_train)
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
   
+
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
 plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testing')
 plt.xlabel('epoch')
@@ -163,6 +171,24 @@ plt.ylabel('cost')
 plt.legend(title='learning curve :')
 plt.show()
 
+l1_, l2_, a1_, a2_ =foward(features_train, w1, w2, b1, b2, batch)
+scatter_draw(a2_,l2_)
+
+'''
+plt.scatter(, label='training')
+plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testing')
+plt.xlabel('epoch')
+plt.ylabel('cost')
+plt.legend(title='learning curve :')
+plt.show()
+
+plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
+plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testing')
+plt.xlabel('epoch')
+plt.ylabel('cost')
+plt.legend(title='learning curve :')
+plt.show()
+'''
 
 
 
