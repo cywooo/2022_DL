@@ -28,13 +28,13 @@ def pre_trea(Raw_data_DF):
 
 #參數與矩陣設定
 np.random.seed() #1218 不錯
-learning_rate = 1e-10
-epoch = 500
-batch = 10
+learning_rate = 1e-10 #1e-10 
+epoch = 500 #500
+batch = 10  #10
 
-Num_of_hiden1 = 20
-Num_of_hiden2 = 10
-Num_of_outLayer = 1
+Num_of_hiden1 = 20 #20
+Num_of_hiden2 = 10 #10
+Num_of_outLayer = 1 #1
 
 #CALL資料預處裡函式
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) 
