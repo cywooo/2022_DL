@@ -12,7 +12,7 @@ def pre_trea(Raw_data_DF):
     Orien_OH=pd.get_dummies(Raw_data_DF['Orientation'],prefix = 'Orientation') #pandas分離出 Orientation 做one hot  
     GlazAD_OH=pd.get_dummies(Raw_data_DF['Glazing Area Distribution'],prefix = 'Glazing Area Distribution') #pandas分離出 Glazing Area Distribution 做one hot  
     Raw_data_DF=Raw_data_DF.drop(['Orientation','Glazing Area Distribution'],axis=1) #刪除舊資料
-    Raw_data_DF=Raw_data_DF.drop(['# Relative Compactness'],axis=1) #第三小題刪除資料使用
+    #Raw_data_DF=Raw_data_DF.drop(['# Relative Compactness'],axis=1) #第三小題刪除資料使用
     Raw_data_DF = pd.concat([Raw_data_DF,Orien_OH,GlazAD_OH],axis=1) #嫁接在一起
     #Raw_data_DF = pd.concat([Raw_data_DF,Orien_OH],axis=1) #第三小題刪除資料使用
     
