@@ -27,7 +27,7 @@ def pre_trea(Raw_data_DF):
     return data_train,data_test,target_train,target_test
 
 #參數與矩陣設定
-np.random.seed() #1218 不錯
+np.random.seed(1218) #1218 不錯
 learning_rate = 1e-10 #1e-10 
 epoch = 500 #500
 batch = 10  #10
@@ -91,8 +91,6 @@ def back( x, t, w1, w2, w3, b1, b2, b3, l1, l2, l3, a1, a2, a3, rl, n):
     b1= b1-np.sum(rl*db1, axis = 1,keepdims=True)
     b2= b2-np.sum(rl*db2, axis = 1,keepdims=True)
     b3= b3-np.sum(rl*db3, axis = 1,keepdims=True)
-    
-    
     return w1, w2, w3, b1, b2, b3
 
 #to get lossing function
