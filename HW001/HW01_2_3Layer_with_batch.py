@@ -80,13 +80,13 @@ np.random.seed(444) #10 #444
 
 #參數與矩陣設定
 learning_rate = 1e-5 #1e-5
-epoch = 2000 #2000
+epoch = 3000 #2000
 batch = 60   #60
 
 Num_of_hiden1 = 64  #64
 Num_of_hiden2 = 32  #32
 Num_of_outLayer = 2 
-draw_scatter=[10,100,500,1000,epoch]
+draw_scatter=[10,100,500,1000,1500,epoch]
 
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) #CALL資料預處裡函式
 
@@ -120,15 +120,15 @@ def foward(x, w1, w2, w3, b1, b2, b3):
 
 #def back(x, n, w1, w2, w3, b1, b2, b3):
 def back( x, t, w1, w2, w3, b1, b2, b3, l1, l2, l3, a1, a2, a3, rl, n): 
-    #Edy=((-1*t.T/l3)+((1-t.T)/(1-l3)))
-    Edy=l3-t.T
+    Edy=((-1*t.T/l3)+((1-t.T)/(1-l3)))
+    #Edy=l3-t.T
     
-    dw3 =np.dot( l2,  (Edy*dactive(a3)).T)
-    dw2 =np.dot( l1,  (np.dot( w3, (Edy*dactive(a3)) )*dReLU(a2)).T )    
-    dw1 =np.dot( x.T, (np.dot( w2, ((np.dot( w3, (Edy*dactive(a3)) )*dReLU(a2))) )*dReLU(a1)).T)
-    db3 =Edy*dactive(a3)
-    db2 =np.dot( w3, Edy*dactive(a3))*dReLU(a2)
-    db1 =np.dot( w2,np.dot( w3, Edy*dactive(a3))*dReLU(a2))*dReLU(a1)
+    dw3 =np.dot( l2,  (Edy*dsoft(a3)).T)
+    dw2 =np.dot( l1,  (np.dot( w3, (Edy*dsoft(a3)) )*dReLU(a2)).T )    
+    dw1 =np.dot( x.T, (np.dot( w2, ((np.dot( w3, (Edy*dsoft(a3)) )*dReLU(a2))) )*dReLU(a1)).T)
+    db3 =Edy*dsoft(a3)
+    db2 =np.dot( w3, Edy*dsoft(a3))*dReLU(a2)
+    db1 =np.dot( w2,np.dot( w3, Edy*dsoft(a3))*dReLU(a2))*dReLU(a1)
     w1= w1-rl*dw1
     w2= w2-rl*dw2
     w3= w3-rl*dw3
@@ -163,17 +163,17 @@ for i in range(epoch):
 
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
 plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
-plt.xlabel('epoch')
-plt.ylabel('loss')
-plt.title('learning curve chart \n b= %d  epoch= %d Lr= %.1e\n Final training loss %.3f ,testing loss %.3f'%(batch,epoch,learning_rate,tloss_draw[-1], vloss_draw[-1]))
-plt.legend(title='learning curve :')
+plt.xlabel('Epoch   Network--> [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
+plt.ylabel('Loss')
+plt.title('Learning curve chart \n b= %d  epoch= %d Lr= %.1e\n Final training loss %.3f ,testing loss %.3f'%(batch,epoch,learning_rate,tloss_draw[-1], vloss_draw[-1]))
+plt.legend(title='Learning curve :')
 plt.show()
 
 plt.plot(np.linspace(1, epoch, epoch), accuracy_train, label='training accuracy')
 #plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
-plt.xlabel('epoch')
-plt.ylabel('accuracy')
-plt.title('accuracy chart \n b= %d  epoch= %d Lr= %.1e\n Final accuracy %.3f'%(batch,epoch,learning_rate,accuracy_train[-1]))
+plt.xlabel('Epoch   Network--> [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
+plt.ylabel('Accuracy')
+plt.title('Accuracy Chart \n b= %d  epoch= %d Lr= %.1e\n Final accuracy %.3f'%(batch,epoch,learning_rate,accuracy_train[-1]))
 #plt.legend(title='learning curve :')
 plt.show()
 
