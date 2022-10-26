@@ -9,13 +9,15 @@ Raw_data_DF = pd.read_csv(file_path,header=None) #利用PANDAS將檔案的資料
 #Raw_data_DF=(Raw_data_DF-Raw_data_DF.mean())/Raw_data_DF.std()
 
 def pre_trea(Raw_data_DF): 
+    target_OH = pd.get_dummies(Raw_data_DF[34]) #pandas分離出 Orientation 做one hot
+    Raw_data_DF=Raw_data_DF.drop(34,axis=1) #刪除舊資料
+    Raw_data_DF = pd.concat([Raw_data_DF,target_OH],axis=1) #嫁接在一起
     data_train_DF =Raw_data_DF.sample(frac=0.8,random_state=np.random.randint(1e5),axis=0)
     data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)]
     
-    
     #會有error要改
-    target_train_DF=pd.get_dummies(data_train_DF.pop(34)) #pandas分離出 Heating Load 做one hot  
-    target_test_DF=pd.get_dummies(data_test_DF.pop(34))
+    target_train_DF= pd.concat([data_train_DF.pop('b'),data_train_DF.pop('g')],axis=1)
+    target_test_DF= pd.concat([data_test_DF.pop('b'),data_test_DF.pop('g')],axis=1)
 
     #將資料轉為NP
     data_train=data_train_DF.values
@@ -46,13 +48,15 @@ def dReLU(x):
     return x
 
 #定義Softmax function
-def Softmax(x, n):
+def Softmax(x):
+    return (np.exp(x)/np.sum(np.exp(x),axis = 1 ,keepdims=True)).T
+'''
     value = np.zeros((n, num_of_targets))
     for i in range(n):
         #max_ = np.max(x[i])
         #value[i] = np.exp(x[i] - max_) / np.sum(np.exp(x[i] - max_)) #stable softmax
         value[i] = np.exp(x[i]) / np.sum(np.exp(x[i]))
-    return value.T
+    return value.T'''
 
 def dsoft(x):
     x=x.T
@@ -63,21 +67,21 @@ def dsoft(x):
             re[i][j] = (np.exp(x[i][j])/sum(np.exp(x[i]))) - np.exp(2*x[i][j])*np.power(sum(np.exp(x[i])),-2)
     return re
 
-np.random.seed(200)
+np.random.seed()
 
 #參數與矩陣設定
-learning_rate = 1e-5
+learning_rate = 1e-4
 epoch = 300
 Num_of_hiden1 = 40
 Num_of_outLayer = 2
 batch = 1
+num_of_features= 34
+num_of_targets= 2
 
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) #CALL資料預處裡函式
 #分資料集
 train_num = len(features_train)
 valid_num = len(features_test)
-num_of_features= len(features_train.T)
-num_of_targets= len(target_train.T)
 batch_epoch = np.int64(train_num / batch)
 
 w1 = np.random.randn(num_of_features, Num_of_hiden1)  * np.sqrt(1. / num_of_features)
@@ -93,7 +97,7 @@ def foward(x, w1, w2, b1, b2,n):
     a1 = np.dot(x, w1).T + b1
     l1 = ReLU(a1)
     a2 = np.dot(l1.T, w2).T + b2
-    l2 = Softmax(a2.T,n)
+    l2 = Softmax(a2.T)
 
     return l1, l2, a1, a2
 
@@ -158,6 +162,7 @@ plt.xlabel('epoch')
 plt.ylabel('cost')
 plt.legend(title='learning curve :')
 plt.show()
+
 
 
 
