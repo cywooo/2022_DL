@@ -171,12 +171,12 @@ plt.legend(title='Learning curve :')
 plt.show()
 
 plt.plot(np.linspace(1, epoch, epoch), accuracy_train, label='training accuracy')
-#plt.plot(np.linspace(1, epoch, epoch), accuracy_test, label='testning accuracy')
+plt.plot(np.linspace(1, epoch, epoch), accuracy_test, label='testning accuracy')
 plt.legend()
 plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
 plt.ylabel('Accuracy')
 plt.title('Accuracy Chart \n b= %d  epoch= %d Lr= %.1e\n Final accuracy %.3f'%(batch,epoch,learning_rate,accuracy_train[-1]))
-#plt.legend(title='learning curve :')
+plt.legend(title='learning curve :')
 plt.show()
 
 
