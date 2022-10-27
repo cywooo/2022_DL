@@ -29,7 +29,7 @@ def pre_trea(Raw_data_DF):
     return data_train,data_test,target_train,target_test
 
 #參數與矩陣設定
-np.random.seed(1218) #1218 不錯
+np.random.seed() #1218 不錯
 learning_rate = 1e-10 #1e-10 
 epoch = 60 #60
 batch = 100  #100

@@ -63,6 +63,7 @@ def accuracy(w1, w2, w3, b1, b2, b3, target, features):
 def cost ( w1, w2, w3, b1, b2, b3, target, features):
     l1, l2, l3, a1, a2, a3 =foward(features, w1, w2, w3, b1, b2, b3)
     return np.average(-1*target*(np.log(l3.T)))
+    #return np.sum(-1*target*(np.log(l3.T)))
 
 def scatter_draw(a_out,y,n):
     y=y/np.amax(y ,axis=0,keepdims=True)
@@ -79,14 +80,15 @@ def scatter_draw(a_out,y,n):
 np.random.seed(444) #10 #444
 
 #參數與矩陣設定
-learning_rate = 1e-5 #1e-5
-epoch = 2000 #2000
-batch = 60   #60
+learning_rate = 1e-5    #1e-5   #1e-5
+epoch = 15000           #2000   #15000
+batch = 130             #60     #281
 
 Num_of_hiden1 = 64  #64
 Num_of_hiden2 = 32  #32
 Num_of_outLayer = 2 
 draw_scatter=[10,100,500,1000,1500,epoch]
+#LR_C=[2000]
 
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) #CALL資料預處裡函式
 
@@ -155,6 +157,8 @@ for i in range(epoch):
     if i+1 in draw_scatter:
         _, _, l3_, _, _, a3_ = foward(features_train, w1, w2, w3, b1, b2, b3)
         scatter_draw(a3_,l3_,i+1)
+    #if i in LR_C:
+        #learning_rate=learning_rate/10
     accuracy_train[i] = accuracy( w1, w2, w3, b1, b2, b3 , target_train, features_train)
     accuracy_test[i] = accuracy( w1, w2, w3, b1, b2, b3 , target_test, features_test)
     tloss_draw[i] = cost( w1, w2, w3, b1, b2, b3 , target_train, features_train)
@@ -175,7 +179,7 @@ plt.plot(np.linspace(1, epoch, epoch), accuracy_test, label='testning accuracy')
 plt.legend()
 plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
 plt.ylabel('Accuracy')
-plt.title('Accuracy Chart \n b= %d  epoch= %d Lr= %.1e\n Final accuracy %.3f'%(batch,epoch,learning_rate,accuracy_train[-1]))
+plt.title('Accuracy Chart \n b= %d  epoch= %d Lr= %.1e\n Final training accuracy %.3f & testing accuracy %.3f'%(batch,epoch,learning_rate,accuracy_train[-1],accuracy_test[-1]))
 plt.legend(title='learning curve :')
 plt.show()
 
