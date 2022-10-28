@@ -5,24 +5,20 @@ import os
 
 file_path = os.getcwd()+'\ionosphere_data.csv' #使CSV檔的位置隨著資料夾變動
 Raw_data_DF = pd.read_csv(file_path,header=None) #利用PANDAS將檔案的資料吃進來
-#Raw_data_DF=(Raw_data_DF-Raw_data_DF.mean())/Raw_data_DF.std()
+Raw_data_DF =Raw_data_DF.sample(frac=1,replace=False ,random_state=np.random.randint(1e6),axis=0) #打亂排序
 
 def pre_trea(Raw_data_DF): 
     target_OH = pd.get_dummies(Raw_data_DF[34]) #pandas分離出 Orientation 做one hot
     Raw_data_DF=Raw_data_DF.drop(34,axis=1) #刪除舊資料
     Raw_data_DF = pd.concat([Raw_data_DF,target_OH],axis=1) #嫁接在一起
-    data_train_DF =Raw_data_DF.sample(frac=0.8,random_state=np.random.randint(1e6),axis=0)
-    data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)]
-    
-    #會有error要改
+    data_train_DF =Raw_data_DF.sample(frac=0.8,replace=False ,random_state=np.random.randint(1e6),axis=0) #training&testing分群 取80%
+    data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)] #剩下的25%
     target_train_DF= pd.concat([data_train_DF.pop('b'),data_train_DF.pop('g')],axis=1)
     target_test_DF= pd.concat([data_test_DF.pop('b'),data_test_DF.pop('g')],axis=1) #Bad在前 CLA1 Good在後 CLA2
-
-    #將資料轉為NP
-    data_train=data_train_DF.values
-    data_test=data_test_DF.values
-    target_train=target_train_DF.values
-    target_test=target_test_DF.values
+    data_train=data_train_DF.values         #將資料轉為NP
+    data_test=data_test_DF.values           #將資料轉為NP
+    target_train=target_train_DF.values     #將資料轉為NP
+    target_test=target_test_DF.values       #將資料轉為NP
 
     return data_train,data_test,target_train,target_test
 
@@ -63,7 +59,6 @@ def accuracy(w1, w2, w3, b1, b2, b3, target, features):
 def cost ( w1, w2, w3, b1, b2, b3, target, features):
     l1, l2, l3, a1, a2, a3 =foward(features, w1, w2, w3, b1, b2, b3)
     return np.average(-1*target*(np.log(l3.T)))
-    #return np.sum(-1*target*(np.log(l3.T)))
 
 def scatter_draw(a_out,y,n):
     y=y/np.amax(y ,axis=0,keepdims=True)
@@ -76,19 +71,16 @@ def scatter_draw(a_out,y,n):
     plt.title('Scatter chart epoch =%d'%(n))
     plt.show()  
 
-
-np.random.seed(444) #10 #444
-
-#參數與矩陣設定
+#參數設定
+np.random.seed(54321) #54321
 learning_rate = 1e-5    #1e-5   #1e-5
-epoch = 15000           #2000   #15000
-batch = 130             #60     #281
+epoch = 5000           #5000   #15000
+batch = 100             #100     #281
 
-Num_of_hiden1 = 64  #64
-Num_of_hiden2 = 32  #32
+Num_of_hiden1 = 128  #128
+Num_of_hiden2 = 64  #64
 Num_of_outLayer = 2 
-draw_scatter=[10,100,500,1000,1500,epoch]
-#LR_C=[2000]
+draw_scatter=[10,20,50,100,500,2000,4000,epoch]
 
 features_train,features_test,target_train,target_test = pre_trea(Raw_data_DF) #CALL資料預處裡函式
 
@@ -110,6 +102,7 @@ tloss_draw=np.zeros(epoch)
 vloss_draw=np.zeros(epoch)
 accuracy_train=np.zeros(epoch)
 accuracy_test=np.zeros(epoch)
+
 #feed forward
 def foward(x, w1, w2, w3, b1, b2, b3):
     a1 = np.dot(w1.T, x.T) + b1
@@ -123,8 +116,7 @@ def foward(x, w1, w2, w3, b1, b2, b3):
 #def back(x, n, w1, w2, w3, b1, b2, b3):
 def back( x, t, w1, w2, w3, b1, b2, b3, l1, l2, l3, a1, a2, a3, rl, n): 
     Edy=((-1*t.T/l3)+((1-t.T)/(1-l3)))
-    #Edy=l3-t.T
-    
+    #Edy=l3-t.T #
     dw3 =np.dot( l2,  (Edy*dsoft(a3)).T)
     dw2 =np.dot( l1,  (np.dot( w3, (Edy*dsoft(a3)) )*dReLU(a2)).T )    
     dw1 =np.dot( x.T, (np.dot( w2, ((np.dot( w3, (Edy*dsoft(a3)) )*dReLU(a2))) )*dReLU(a1)).T)
@@ -149,6 +141,7 @@ def batch_pick( n, train_num, counter):
     target_train_batch = target_train[counter:counter+n][:]
     return features_train_batch, target_train_batch
  
+# main
 for i in range(epoch):
     for j in range(batch_epoch+1):   
         features_train_batch,target_train_batch = batch_pick(batch ,train_num , j)
@@ -165,9 +158,8 @@ for i in range(epoch):
     vloss_draw[i] = cost( w1, w2, w3, b1, b2, b3 , target_test, features_test)
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
   
-
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label=' Training')
-plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label=' Testting')
+plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label=' Testting',color='red', linestyle='dashed')
 plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
 plt.ylabel('Loss')
 plt.title('Learning curve chart \n b= %d  epoch= %d Lr= %.1e\n Final training loss %.3f ,testing loss %.3f'%(batch,epoch,learning_rate,tloss_draw[-1], vloss_draw[-1]))
@@ -180,7 +172,16 @@ plt.legend()
 plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
 plt.ylabel('Accuracy')
 plt.title('Accuracy Chart \n b= %d  epoch= %d Lr= %.1e\n Final training accuracy %.3f & testing accuracy %.3f'%(batch,epoch,learning_rate,accuracy_train[-1],accuracy_test[-1]))
-plt.legend(title='learning curve :')
+plt.legend()
+plt.show()
+
+plt.plot(np.linspace(1, epoch, epoch), 1-accuracy_train, label='training error')
+plt.plot(np.linspace(1, epoch, epoch), 1-accuracy_test, label='testning error')
+plt.legend()
+plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
+plt.ylabel('Error rate')
+plt.title('Error rate Chart \n b= %d  epoch= %d Lr= %.1e\n Final training error %.3f & testing error %.3f'%(batch,epoch,learning_rate,1-accuracy_train[-1],1-accuracy_test[-1]))
+plt.legend()
 plt.show()
 
 
