@@ -5,37 +5,36 @@ import os
 
 file_path = os.getcwd()+'\energy_efficiency_data.csv' #使CSV檔的位置隨著資料夾變動
 Raw_data_DF = pd.read_csv(file_path) #利用PANDAS將檔案的資料吃進來
-#Raw_data_DF=(Raw_data_DF-Raw_data_DF.mean())/Raw_data_DF.std()
+Raw_data_DF =Raw_data_DF.sample(frac=1,replace=False ,random_state=np.random.randint(1e6),axis=0) #打亂排序
 
 ###資料預處理區(在Pandas的DF格式下進行one hot 以及 training&testing分群)
 def pre_trea(Raw_data_DF):
     Orien_OH=pd.get_dummies(Raw_data_DF['Orientation'],prefix = 'Orientation') #pandas分離出 Orientation 做one hot  
     GlazAD_OH=pd.get_dummies(Raw_data_DF['Glazing Area Distribution'],prefix = 'Glazing Area Distribution') #pandas分離出 Glazing Area Distribution 做one hot  
     Raw_data_DF=Raw_data_DF.drop(['Orientation','Glazing Area Distribution'],axis=1) #刪除舊資料
-    #Raw_data_DF=Raw_data_DF.drop(['# Relative Compactness'],axis=1) #第三小題刪除資料使用
+    #Raw_data_DF=Raw_data_DF.drop(['Cooling Load'],axis=1) #第三小題抽離資料使用
     Raw_data_DF = pd.concat([Raw_data_DF,Orien_OH,GlazAD_OH],axis=1) #嫁接在一起
-    #Raw_data_DF = pd.concat([Raw_data_DF,Orien_OH],axis=1) #第三小題刪除資料使用
+    #Raw_data_DF = pd.concat([Raw_data_DF,GlazAD_OH],axis=1) #第三小題抽離資料使用
     
-    data_train_DF =Raw_data_DF.sample(frac=0.75,random_state=np.random.randint(1e5),axis=0) #training&testing分群
-    data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)]
+    data_train_DF =Raw_data_DF.sample(frac=0.75,random_state=np.random.randint(1e5),axis=0) #training&testing分群 取75%
+    data_test_DF =Raw_data_DF[~Raw_data_DF.index.isin(data_train_DF.index)] #剩下的25%
     
-    target_train_DF=data_train_DF.pop('Heating Load')   #pandas分離出 Heating Load 做one hot  
-    target_test_DF=data_test_DF.pop('Heating Load')
+    target_train_DF=data_train_DF.pop('Heating Load')   #將 Heating Load 從矩陣中分離 
+    target_test_DF=data_test_DF.pop('Heating Load')     #將 Heating Load 從矩陣中分離
     data_train=data_train_DF.values                     #將資料轉為NP
-    data_test=data_test_DF.values
-    target_train=np.reshape(target_train_DF.values,[len(target_train_DF),1])
-    target_test=np.reshape(target_test_DF.values,[len(target_test_DF),1])
-
+    data_test=data_test_DF.values                       #將資料轉為NP
+    target_train=target_train_DF.values                 #將資料轉為NP
+    target_test=target_test_DF.values                   #將資料轉為NP
     return data_train,data_test,target_train,target_test
 
 #參數與矩陣設定
-np.random.seed(1218) #1218 不錯
+np.random.seed(600) #1218 #600
 learning_rate = 1e-10 #1e-10 
-epoch = 60 #60
+epoch = 60 #20
 batch = 100  #100
 
-Num_of_hiden1 = 20 #20
-Num_of_hiden2 = 10 #10
+Num_of_hiden1 = 32 #32
+Num_of_hiden2 = 16 #16
 Num_of_outLayer = 1 #1
 
 #CALL資料預處裡函式
@@ -121,10 +120,24 @@ for i in range(epoch):
     print('Training parameters: epochs = %d tloss = %f vloss = %f' % (i+1, tloss_draw[i], vloss_draw[i]))
     
 plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
-plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting')
-plt.xlabel('epoch')
+plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting',color='red', linestyle='dashed')
+plt.xlabel('Epoch with Network [%d-%d-%d-%d]'%(num_of_features,Num_of_hiden1,Num_of_hiden2,Num_of_outLayer))
 plt.ylabel('loss')
 plt.title('learning curve chart \n b= %d  epoch= %d Lr= %.1e\n final training loss %.3f ,testing loss %.3f'%(batch,epoch,learning_rate,tloss_draw[-1], vloss_draw[-1]))
+plt.legend(title='learning curve :')
+plt.show()
+
+plt.plot(np.linspace(1, epoch, epoch), tloss_draw, label='training')
+plt.xlabel('epoch')
+plt.ylabel('loss')
+plt.title('Training RMS Error \n b= %d  epoch= %d Lr= %.1e\n final training loss %.3f'%(batch,epoch,learning_rate,tloss_draw[-1]))
+plt.legend(title='learning curve :')
+plt.show()
+
+plt.plot(np.linspace(1, epoch, epoch), vloss_draw, label='testting',color='red')
+plt.xlabel('epoch')
+plt.ylabel('loss')
+plt.title('Test RMS Error \n b= %d  epoch= %d Lr= %.1e\n final testing loss %.3f'%(batch,epoch,learning_rate,vloss_draw[-1]))
 plt.legend(title='learning curve :')
 plt.show()
 
