@@ -1,11 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.utils.data as dset
 from torchvision import datasets, transforms
-import torch.nn.functional as F
 from torch.autograd import Variable
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 # Hyper Parameters
@@ -64,12 +61,12 @@ class CNN_Model(nn.Module):
         # Max pool 1
         self.maxpool1 = nn.MaxPool2d(kernel_size=2) #output_shape=(64,12,12)
         # Convolution 2
-        self.cov2 = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=7, stride=1, padding=0) #output_shape=(32,6,6)
+        self.cov2 = nn.Conv2d(in_channels=64, out_channels=16, kernel_size=7, stride=1, padding=0) #output_shape=(16,6,6)
         self.relu2 = nn.ReLU() # activation
         # Max pool 2
-        self.maxpool2 = nn.MaxPool2d(kernel_size=2) #output_shape=(32,3,3)
-        # Fully connected 1 ,#input_shape=(32*3*3)
-        self.fc1 = nn.Linear(32 * 3 * 3, 128) 
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2) #output_shape=(16,3,3)
+        # Fully connected 1 ,#input_shape=(16*3*3)
+        self.fc1 = nn.Linear(16 * 3 * 3, 128) 
         self.relu3 = nn.ReLU() # activation
         self.fc2 = nn.Linear(128, 64) 
         self.relu4 = nn.ReLU() # activation
@@ -243,7 +240,7 @@ plt.title('predict = %d label = %d'%(pred_[incorrect_index[0]],label_[incorrect_
 plt.show()
         
 #%%
-show_fig_num = 65
+show_fig_num = 2
 
 plt.figure()
 plt.imshow(test_imag[show_fig_num])
@@ -269,9 +266,9 @@ for i in range(64):
     plt.imshow(maxpool1_out[show_fig_num][i].detach().numpy())
 plt.show()
 
-plt.figure(figsize=(8,4))
-for i in range(32):
-    plt.subplot(8,4,i+1)
+plt.figure(figsize=(4,4))
+for i in range(16):
+    plt.subplot(4,4,i+1)
     plt.xticks([])
     plt.yticks([])
     plt.grid(False)
@@ -279,9 +276,9 @@ for i in range(32):
 plt.show()
 
         
-plt.figure(figsize=(8,4))
-for i in range(32):
-    plt.subplot(8,4,i+1)
+plt.figure(figsize=(4,4))
+for i in range(16):
+    plt.subplot(4,4,i+1)
     plt.xticks([])
     plt.yticks([])
     plt.grid(False)

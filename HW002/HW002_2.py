@@ -1,11 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.utils.data as dset
 from torchvision import datasets, transforms
-import torch.nn.functional as F
 from torch.autograd import Variable
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 # Hyper Parameters
@@ -14,8 +11,8 @@ LR = 0.001
 #n_iters = 10000
 #num_epochs = n_iters / (len(train) / batch_size)
 #num_epochs = int(num_epochs)
-num_epochs = 3
-batch_size = 300
+num_epochs = 10
+batch_size = 100
 
 # GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 判斷是否有GPU資源可用
@@ -23,11 +20,11 @@ print(device)
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
-     transforms.Normalize((0.5,),(0.5,))])
+     transforms.Normalize((0.5,0.5,0.5),(0.5,0.5,0.5))])
 
 # Data
-train = datasets.MNIST(root='MNIST', download=True, train=True , transform=transform)
-test = datasets.MNIST(root='MNIST', download=True, train=False , transform=transform)
+train = datasets.CIFAR10(root='CIFAR10', download=True, train=True , transform=transform)
+test = datasets.CIFAR10(root='CIFAR10', download=True, train=False , transform=transform)
 # create validation set
 
 train_imag = train.data / 255
@@ -36,11 +33,13 @@ test_imag = test.data / 255
 test_target = test.targets
 
 
-train, valid = dset.random_split(train,[55000,5000])
+train, valid = dset.random_split(train,[45000,5000])
 train_loader = dset.DataLoader(train, batch_size=batch_size, shuffle=True)
 valid_loader = dset.DataLoader(valid, batch_size=batch_size, shuffle=True)
 test_loader = dset.DataLoader(test, batch_size=len(test.targets), shuffle=False)
 
+classes = ('plane', 'car', 'bird', 'cat',
+           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 
 #%%
@@ -49,7 +48,7 @@ plt.figure()
 plt.imshow(train_imag[3])
 plt.colorbar()
 plt.grid(False)
-plt.title(train_target[3])
+plt.title(classes[train_target[3]])
 plt.show()
 '''
 #%%
@@ -58,18 +57,18 @@ plt.show()
 class CNN_Model(nn.Module):
     def __init__(self):
         super(CNN_Model, self).__init__()
-        # Convolution 1 , input_shape=(1,28,28)
-        self.cov1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=5, stride=1, padding=0) #output_shape=(64,24,24)
+        # Convolution 1 , input_shape=(3,32,32)
+        self.cov1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=5, stride=1, padding=0) #output_shape=(64,28,28)
         self.relu1 = nn.ReLU() # activation
         # Max pool 1
-        self.maxpool1 = nn.MaxPool2d(kernel_size=2) #output_shape=(64,12,12)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2) #output_shape=(64,14,14)
         # Convolution 2
-        self.cov2 = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=7, stride=1, padding=0) #output_shape=(32,6,6)
+        self.cov2 = nn.Conv2d(in_channels=64, out_channels=16, kernel_size=7, stride=1, padding=0) #output_shape=(16,8,8)
         self.relu2 = nn.ReLU() # activation
         # Max pool 2
-        self.maxpool2 = nn.MaxPool2d(kernel_size=2) #output_shape=(32,3,3)
-        # Fully connected 1 ,#input_shape=(32*3*3)
-        self.fc1 = nn.Linear(32 * 3 * 3, 128) 
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2) #output_shape=(16,4,4)
+        # Fully connected 1 ,#input_shape=(16*4*4)
+        self.fc1 = nn.Linear(16 * 4 * 4, 128) 
         self.relu3 = nn.ReLU() # activation
         self.fc2 = nn.Linear(128, 64) 
         self.relu4 = nn.ReLU() # activation
@@ -99,7 +98,7 @@ model = CNN_Model()
 print(model)
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)   # optimize all cnn parameters
 loss_func = nn.CrossEntropyLoss()   # the target label is not one-hotted
-input_shape = (-1,1,28,28)
+input_shape = (-1,3,32,32)
 
 # Train
 def fit_model(model, loss_func, optimizer, input_shape, num_epochs, train_loader, valid_loader, test_loader):
@@ -231,7 +230,7 @@ plt.figure()
 plt.imshow(test_imag[correct_index[0]])
 plt.colorbar()
 plt.grid(False)
-plt.title('predict = %d label = %d'%(pred_[correct_index[0]],label_[correct_index[0]]))
+plt.title('predict = %s label = %s'%(classes[pred_[correct_index[0]]],classes[label_[correct_index[0]]]))
 plt.show()
 
 
@@ -239,16 +238,17 @@ plt.figure()
 plt.imshow(test_imag[incorrect_index[0]])
 plt.colorbar()
 plt.grid(False)
-plt.title('predict = %d label = %d'%(pred_[incorrect_index[0]],label_[incorrect_index[0]]))
+plt.title('predict = %s label = %s'%(classes[pred_[incorrect_index[0]]],classes[label_[incorrect_index[0]]]))
 plt.show()
         
 #%%
-show_fig_num = 65
+show_fig_num = correct_index[5]
 
 plt.figure()
 plt.imshow(test_imag[show_fig_num])
 plt.colorbar()
 plt.grid(False)
+plt.title(classes[test_target[show_fig_num]])
 plt.show()
 
 plt.figure(figsize=(8,8))
@@ -269,9 +269,9 @@ for i in range(64):
     plt.imshow(maxpool1_out[show_fig_num][i].detach().numpy())
 plt.show()
 
-plt.figure(figsize=(8,4))
-for i in range(32):
-    plt.subplot(8,4,i+1)
+plt.figure(figsize=(4,4))
+for i in range(16):
+    plt.subplot(4,4,i+1)
     plt.xticks([])
     plt.yticks([])
     plt.grid(False)
@@ -279,9 +279,9 @@ for i in range(32):
 plt.show()
 
         
-plt.figure(figsize=(8,4))
-for i in range(32):
-    plt.subplot(8,4,i+1)
+plt.figure(figsize=(4,4))
+for i in range(16):
+    plt.subplot(4,4,i+1)
     plt.xticks([])
     plt.yticks([])
     plt.grid(False)
