@@ -11,7 +11,7 @@ LR = 0.001
 #n_iters = 10000
 #num_epochs = n_iters / (len(train) / batch_size)
 #num_epochs = int(num_epochs)
-num_epochs = 10
+num_epochs = 15
 batch_size = 100
 
 # GPU
@@ -96,7 +96,7 @@ class CNN_Model(nn.Module):
 #%%
 model = CNN_Model()
 print(model)
-optimizer = torch.optim.Adam(model.parameters(), lr=LR)   # optimize all cnn parameters
+optimizer = torch.optim.Adam(model.parameters(), lr=LR,weight_decay= 1e-2)   # optimize all cnn parameters weight_decay= 1e-2
 loss_func = nn.CrossEntropyLoss()   # the target label is not one-hotted
 input_shape = (-1,3,32,32)
 
@@ -226,6 +226,8 @@ for k in range(len(label_)):
     elif  label_[k] != pred_[k]:
         incorrect_index.append(k)
 
+
+
 plt.figure()
 plt.imshow(test_imag[correct_index[0]])
 plt.colorbar()
@@ -235,10 +237,10 @@ plt.show()
 
 
 plt.figure()
-plt.imshow(test_imag[incorrect_index[0]])
+plt.imshow(test_imag[incorrect_index[3]])
 plt.colorbar()
 plt.grid(False)
-plt.title('predict = %s label = %s'%(classes[pred_[incorrect_index[0]]],classes[label_[incorrect_index[0]]]))
+plt.title('predict = %s label = %s'%(classes[pred_[incorrect_index[3]]],classes[label_[incorrect_index[3]]]))
 plt.show()
         
 #%%

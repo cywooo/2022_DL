@@ -11,12 +11,12 @@ LR = 0.001
 #n_iters = 10000
 #num_epochs = n_iters / (len(train) / batch_size)
 #num_epochs = int(num_epochs)
-num_epochs = 3
+num_epochs = 15
 batch_size = 300
 
 # GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 判斷是否有GPU資源可用
-print(device)
+#print(device)
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -94,7 +94,7 @@ class CNN_Model(nn.Module):
 #%%
 model = CNN_Model()
 print(model)
-optimizer = torch.optim.Adam(model.parameters(), lr=LR)   # optimize all cnn parameters
+optimizer = torch.optim.Adam(model.parameters(), lr=LR) #weight_decay= 1e-2  # optimize all cnn parameters
 loss_func = nn.CrossEntropyLoss()   # the target label is not one-hotted
 input_shape = (-1,1,28,28)
 
@@ -175,7 +175,7 @@ predict = model(test_draw)
 plt.plot(torch.linspace(1,len(training_loss),len(training_loss),dtype=int), training_loss,'b-', label='Training_loss')
 plt.plot(torch.linspace(1,len(validation_loss),len(validation_loss),dtype=int), validation_loss,'g-', label='validation_loss')
 plt.plot(torch.linspace(1,len(testing_loss),len(testing_loss),dtype=int), testing_loss,'r-', label='Test_loss')
-plt.title('Training & Validation loss')
+plt.title('Training & Validation loss ')
 plt.xlabel('Number of epochs')
 plt.ylabel('Loss')
 plt.legend()

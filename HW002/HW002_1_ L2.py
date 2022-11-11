@@ -11,7 +11,7 @@ LR = 0.001
 #n_iters = 10000
 #num_epochs = n_iters / (len(train) / batch_size)
 #num_epochs = int(num_epochs)
-num_epochs = 3
+num_epochs = 15
 batch_size = 300
 
 # GPU
