@@ -3,24 +3,33 @@ import string
 import random
 import torch
 #%%Prepare data
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # 判斷是否有GPU資源可用
+print(device)
+
 all_characters = string.printable
 n_characters = len(all_characters)
 
 with open('shakespeare_train.txt') as f:
-    file = f.read()
+    text_train = f.read()
     
 with open('shakespeare_valid.txt') as f:
     text_valid = f.read()
     
-file_len = len(file)
-
+train_len = len(text_train)
+valid_len = len(text_valid)
 #%%
-chunk_len = 1000
-
+chunk_len = 200
 def random_chunk():
-    start_index = random.randint(0, file_len - chunk_len)
+    start_index = random.randint(0, train_len - chunk_len)
     end_index = start_index + chunk_len + 1
-    return file[start_index:end_index]
+    return text_train[start_index:end_index]
+
+valid_chunk_len = 200
+def valid_chunk():
+    start_index = random.randint(0, valid_len - valid_chunk_len)
+    end_index = start_index + valid_chunk_len + 1
+    return text_valid[start_index:end_index]
 
 #%% Build the Model
 import torch
@@ -47,6 +56,8 @@ class RNN_(nn.Module):
 
     def init_hidden(self):
         return Variable(torch.zeros(self.n_layers, 1, self.hidden_size))
+    
+    
 #%% Inputs and Targets     OKOKOKOK   
 # Turn string into list of longs
 def char_tensor(string):
@@ -55,13 +66,18 @@ def char_tensor(string):
         tensor[c] = all_characters.index(string[c])
     return Variable(tensor)
 
-print(char_tensor('abcDEF'))
-
 def random_training_set():    
     chunk = random_chunk()
     inp = char_tensor(chunk[:-1])
     target = char_tensor(chunk[1:]) ##向後一位的預測
     return inp, target
+
+def random_validing_set():
+    chunk = random_chunk()
+    inp = char_tensor(chunk[:-1])
+    target = char_tensor(chunk[1:]) ##向後一位的預測
+    return inp, target   
+
 
 #%% Evaluating
 def evaluate(prime_str='A', predict_len=100, temperature=0.8):
@@ -87,6 +103,17 @@ def evaluate(prime_str='A', predict_len=100, temperature=0.8):
         inp = char_tensor(predicted_char)
 
     return predicted
+#%%get V loss
+def get_V_loss(inp, target):
+    hidden = decoder.init_hidden()
+    decoder.zero_grad()
+    loss = 0
+    for c in range(chunk_len):
+        output, hidden = decoder(inp[c], hidden)
+        loss += criterion(output, target[c].view(-1))
+
+    return loss.item() / valid_chunk_len
+
 #%% Training
 import time, math
 
@@ -103,21 +130,19 @@ def train(inp, target):
 
     for c in range(chunk_len):
         output, hidden = decoder(inp[c], hidden)
-        #print(output.shape)
-        #print(target[c].view(1).shape)
-        loss += criterion(output, target[c].view(-1))####小心
-
+        loss += criterion(output, target[c].view(-1))
+    
     loss.backward()
     decoder_optimizer.step()
     ##return loss.data[0] / chunk_len
     return loss.item() / chunk_len
 
 
-n_epochs = 300
+n_epochs = 1000
 print_every = 100
 plot_every = 10
 hidden_size = 256
-n_layers = 2
+n_layers = 1
 lr = 0.005
 
 decoder = RNN_(n_characters, hidden_size, n_characters, n_layers)
@@ -126,35 +151,46 @@ criterion = nn.CrossEntropyLoss()
 
 start = time.time()
 all_losses = []
-loss_avg = 0
+V_losses = []
+train_loss_avg = 0
 
 for epoch in range(1, n_epochs + 1):
     inp, target = random_training_set()
-    loss = train(inp, target)       
-    loss_avg += loss
+    train_loss = train(inp, target)       
+    train_loss_avg += train_loss
 
-    if epoch % print_every == 0:
-        print('\n','[%s (%d %d%%) %.4f]' % (time_since(start), epoch, epoch / n_epochs * 100, loss))
-        print(evaluate('Wh', 100), '\n')
+    if epoch % print_every == 0: ##過度期的輸出
+        print('\n','[%s (%d %d%%) tloss: %.4f ]' % (time_since(start), epoch, epoch / n_epochs * 100, train_loss))
+        print(evaluate('Wh', 200), '\n')
 
     if epoch % plot_every == 0:
-        all_losses.append(loss_avg / plot_every)
-        loss_avg = 0
+        V_inp, V_target = random_validing_set()
+        V_loss = get_V_loss(V_inp, V_target)  
+        V_losses.append(V_loss)   
+        all_losses.append(train_loss_avg / plot_every)
+        train_loss_avg = 0
         
 #%%Plotting the Training Losses
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 # %matplotlib inline
 
-plt.figure()
-plt.plot(all_losses)
+plt.plot(all_losses, label='training Loss')
+plt.plot(V_losses, label='validation Loss')
+plt.xlabel('Iteration')
+plt.ylabel('Loss')
+plt.title('Learning Curve')
+plt.legend()
+plt.show()
+
+print('\n','[Final tloss: %.4f Final vloss: %.4f ]' % (all_losses[-1],V_losses[-1]))
+
 print('\n','!!! Outcome temperature=0.8 !!!','\n')
-print(evaluate('Th', 300, temperature=0.8))
+print(evaluate('ROMEO:', 300, temperature=0.8))
 
 '''
 print('\n','!!! Outcome temperature=0.2 !!!','\n')
-print(evaluate('Th', 200, temperature=0.2))
+print(evaluate('ROMEO:', 200, temperature=0.2))
 
 print('\n','!!! Outcome temperature=1.4 !!!','\n')
-print(evaluate('Th', 200, temperature=1.4))
+print(evaluate('ROMEO:', 200, temperature=1.4))
 '''
