@@ -15,7 +15,7 @@ with open('shakespeare_valid.txt') as f:
 file_len = len(file)
 
 #%%
-chunk_len = 500
+chunk_len = 1000
 
 def random_chunk():
     start_index = random.randint(0, file_len - chunk_len)
@@ -116,7 +116,7 @@ def train(inp, target):
 n_epochs = 300
 print_every = 100
 plot_every = 10
-hidden_size = 1024
+hidden_size = 256
 n_layers = 2
 lr = 0.005
 
@@ -149,7 +149,7 @@ import matplotlib.ticker as ticker
 plt.figure()
 plt.plot(all_losses)
 print('\n','!!! Outcome temperature=0.8 !!!','\n')
-print(evaluate('Th', 200, temperature=0.8))
+print(evaluate('Th', 300, temperature=0.8))
 
 '''
 print('\n','!!! Outcome temperature=0.2 !!!','\n')
