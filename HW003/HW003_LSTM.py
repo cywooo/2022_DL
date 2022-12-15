@@ -2,13 +2,9 @@ import unidecode
 import string
 import random
 import torch
-import os
-import re
 #%%Prepare data
 all_characters = string.printable
 n_characters = len(all_characters)
-#file_path = os.getcwd()+'\shakespeare_train.txt'
-#file_path = 'D:\\github\\2022_DL\\HW003\\shakespeare_train.txt'
 
 with open('shakespeare_train.txt') as f:
     file = f.read()
@@ -17,7 +13,7 @@ with open('shakespeare_valid.txt') as f:
     text_valid = f.read()
     
 file_len = len(file)
-print('file_len =', file_len)
+
 #%%
 chunk_len = 500
 
@@ -25,8 +21,6 @@ def random_chunk():
     start_index = random.randint(0, file_len - chunk_len)
     end_index = start_index + chunk_len + 1
     return file[start_index:end_index]
- 
-print(random_chunk())
 
 #%% Build the Model
 import torch
@@ -122,7 +116,7 @@ def train(inp, target):
 n_epochs = 300
 print_every = 100
 plot_every = 10
-hidden_size = 100
+hidden_size = 1024
 n_layers = 2
 lr = 0.005
 
