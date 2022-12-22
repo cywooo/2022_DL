@@ -47,12 +47,21 @@ class RNN_(nn.Module):
         self.n_layers = n_layers
         
         self.encoder = nn.Embedding(input_size, hidden_size)
-        self.rnn = nn.RNN(hidden_size, hidden_size, n_layers)
+        self.lstm = nn.LSTM(hidden_size, hidden_size, n_layers)
         self.decoder = nn.Linear(hidden_size, output_size)
     
     def forward(self, input, hidden):
         input_ = self.encoder(input.view(1, -1))
-        output, hidden = self.rnn(input_.view(1, 1, -1),hidden)
+        h0 = torch.zeros(self.n_layers, input_.size(1), self.hidden_size).to(device) 
+        c0 = torch.zeros(self.n_layers, input_.size(1), self.hidden_size).to(device)
+        '''
+        print(input.size())
+        print(input_.size(2))
+        print(input_.size())
+        print(h0.size())
+        '''
+        
+        output, hidden = self.lstm(input_.view(1,1,-1),(h0, c0))
         output = self.decoder(output.view(1, -1))
         return output, hidden
 
@@ -95,7 +104,7 @@ def evaluate(prime_str='A', predict_len=100, temperature=0.8):
     inp = prime_input[-1] 
     
     for p in range(predict_len):
-        hidden = hidden.cuda()
+        #hidden = hidden.cuda()
         '''
         print(p)
         print(inp.type())
@@ -141,6 +150,7 @@ def train(inp, target):
     loss = 0
 
     for c in range(chunk_len):
+        #print(inp[c])
         output, hidden = decoder(inp[c], hidden)
         loss += criterion(output, target[c].view(-1))
     
@@ -173,7 +183,7 @@ for epoch in range(1, n_epochs + 1):
     train_loss_avg += train_loss
 
     if epoch % print_every == 0: ##過度期的輸出
-        print('\n','[%s (%d %d%%) tloss: %.4f ]' % (time_since(start), epoch, epoch / n_epochs * 100, train_loss))
+        print('\n','[%s (epoch:%d %d%%) tloss: %.4f ]' % (time_since(start), epoch, epoch / n_epochs * 100, train_loss))
         print(evaluate('Wh', 200), '\n')
 
     if epoch % plot_every == 0:
@@ -202,7 +212,7 @@ plt.show()
 print('\n','[Final tloss: %.4f Final vloss: %.4f ]' % (all_losses[-1],V_losses[-1]))
 
 print('\n','!!! Outcome temperature=0.8 !!!','\n')
-print(evaluate('ROMEO:', 300, temperature=0.8))
+print(evaluate('JULIET:', 300, temperature=0.8))
 
 '''
 print('\n','!!! Outcome temperature=0.2 !!!','\n')
