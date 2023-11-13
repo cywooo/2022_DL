@@ -30,7 +30,7 @@ def pre_trea(Raw_data_DF):
 #參數與矩陣設定
 np.random.seed(600) #1218 #600
 learning_rate = 1e-10 #1e-10 
-epoch = 60 #20
+epoch = 20 #20
 batch = 100  #100
 
 Num_of_hiden1 = 32 #32
